@@ -411,6 +411,97 @@
 
         h2 { color: var(--ac-primary-dark); margin-top: 40px; font-weight: 600; }
         #reportList { margin-top: 16px; }
+
+        /* Collapsible Saved Reports section */
+        .reports-section {
+            margin-top: 40px;
+            background: #fff;
+            border: 1px solid #e5e7e8;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .reports-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            cursor: pointer;
+            user-select: none;
+            background: linear-gradient(180deg, #fafcfd 0%, #ffffff 100%);
+            border-bottom: 1px solid transparent;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .reports-header:hover,
+        .reports-header:focus-visible {
+            background: linear-gradient(180deg, #eef6f9 0%, #fafcfd 100%);
+            outline: none;
+        }
+        .reports-header:focus-visible {
+            box-shadow: inset 0 0 0 2px var(--ac-primary-light);
+        }
+        .reports-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--ac-primary-dark);
+        }
+        .reports-title h2 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: inherit;
+        }
+        .reports-chevron {
+            transition: transform 0.2s ease;
+            color: var(--ac-primary);
+            flex-shrink: 0;
+        }
+        .reports-section[data-collapsed="true"] .reports-chevron {
+            transform: rotate(-90deg);
+        }
+        .reports-count {
+            background: var(--ac-tint);
+            color: var(--ac-primary-dark);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .reports-hint {
+            font-size: 0.82rem;
+            color: var(--ac-grey);
+            font-style: italic;
+        }
+        .reports-body {
+            padding: 0 18px 18px;
+            border-top: 1px solid #eef0f1;
+        }
+        .reports-section[data-collapsed="true"] .reports-body {
+            display: none;
+        }
+        .reports-section[data-collapsed="true"] .reports-header {
+            border-bottom-color: transparent;
+        }
+
+        /* When the section is collapsed and empty, hide it entirely so the
+           page stays clean when there are no saved reports yet. */
+        .reports-section.is-empty {
+            display: none;
+        }
+
+        /* Print: always expand the saved reports so the audit trail prints
+           even if the user collapsed the section in the form view. */
+        @media print {
+            .reports-section { box-shadow: none; border: none; }
+            .reports-header { background: none !important; border-bottom: 1px solid #ccc; }
+            .reports-chevron, .reports-hint { display: none; }
+            .reports-body { display: block !important; padding: 0; border-top: none; }
+            .reports-section[data-collapsed="true"] .reports-body { display: block !important; }
+        }
         .report-item {
             background: #fff;
             border: 1px solid #e5e7e8;
@@ -1362,14 +1453,25 @@
             </div>
         </form>
 
-        <h2>Saved Reports</h2>
-        <div class="reports-toolbar">
-            <button type="button" class="secondary danger" id="clearAllBtn" title="Permanently delete every saved report. Asks for confirmation.">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                Clear All
-            </button>
-        </div>
-        <div id="reportList"></div>
+        <section class="reports-section" id="reportsSection" data-collapsed="false" aria-label="Saved reports">
+            <div class="reports-header" id="reportsHeader" role="button" tabindex="0" aria-expanded="true" aria-controls="reportsBody" title="Click to collapse or expand the saved reports list. State persists across page reloads.">
+                <div class="reports-title">
+                    <svg class="reports-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                    <h2>Saved Reports</h2>
+                    <span class="reports-count" id="reportsCount">0</span>
+                </div>
+                <span class="reports-hint" id="reportsHint">Click to collapse</span>
+            </div>
+            <div class="reports-body" id="reportsBody">
+                <div class="reports-toolbar">
+                    <button type="button" class="secondary danger" id="clearAllBtn" title="Permanently delete every saved report. Asks for confirmation.">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Clear All
+                    </button>
+                </div>
+                <div id="reportList"></div>
+            </div>
+        </section>
     </div>
 
     <script>
@@ -1488,8 +1590,10 @@
             });
             if (changed) saveReports(reports);
             refreshCloneSource();
+            // Update the collapsible header (count + visibility) before rendering
+            updateReportsHeader(reports.length);
             if (!reports.length) {
-                reportList.innerHTML = '<p class="empty">No reports saved yet.</p>';
+                reportList.innerHTML = '';
                 return;
             }
             reportList.innerHTML = reports.map((r) => `
@@ -1530,6 +1634,32 @@
                     ${renderCardSignatures(r)}
                 </div>
             `).join('');
+        }
+
+        // Collapsible Saved Reports header — keeps the form view tidy when
+        // there are many saved reports. State is persisted in localStorage.
+        function updateReportsHeader(count) {
+            const section = document.getElementById('reportsSection');
+            const countEl = document.getElementById('reportsCount');
+            const hintEl  = document.getElementById('reportsHint');
+            const header  = document.getElementById('reportsHeader');
+            if (!section) return;
+            countEl.textContent = count;
+            const collapsed = section.dataset.collapsed === 'true';
+            hintEl.textContent = collapsed ? 'Click to expand' : 'Click to collapse';
+            header.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            // Hide the whole section when there are no reports — keeps the page clean.
+            section.classList.toggle('is-empty', count === 0);
+        }
+
+        function toggleReportsSection(forceState) {
+            const section = document.getElementById('reportsSection');
+            const collapsed = forceState !== undefined
+                ? forceState
+                : section.dataset.collapsed !== 'true';
+            section.dataset.collapsed = collapsed ? 'true' : 'false';
+            storage.set('reportsCollapsed', collapsed ? 'true' : 'false');
+            updateReportsHeader(getReports().length);
         }
 
         function refreshCloneSource() {
@@ -1592,6 +1722,8 @@
             // Assign a fresh ID for the next entry — but DO NOT clear signatures.
             // They stay until the user explicitly clones or clears the form.
             setReportId();
+            // Make sure the Saved Reports section is open so the user sees the flash
+            toggleReportsSection(false);
             // Visible feedback: toast + scroll to the new card + flash highlight
             showToast('✓ Report saved (signatures preserved)', 'success');
             const newCard = document.querySelector(`.report-item [data-id="${newReport.id}"]`)?.closest('.report-item');
@@ -2804,7 +2936,21 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         // Seed each time table with one empty row so the UI is obvious
         fillTimeRows('workTimeRows', []);
         fillTimeRows('travelTimeRows', []);
+
+        // Restore Saved Reports collapse state, then render
+        const savedCollapsed = storage.get('reportsCollapsed') === 'true';
+        document.getElementById('reportsSection').dataset.collapsed = savedCollapsed ? 'true' : 'false';
         loadReports();
+
+        // Click and keyboard handlers for the Saved Reports toggle header
+        const reportsHeaderEl = document.getElementById('reportsHeader');
+        reportsHeaderEl.addEventListener('click', () => toggleReportsSection());
+        reportsHeaderEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleReportsSection();
+            }
+        });
 
         // ===== PWA: register service worker for offline / installable use =====
         if ('serviceWorker' in navigator) {
