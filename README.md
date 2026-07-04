@@ -42,6 +42,14 @@ A modern, installable web app for **Atlas Copco service technicians** to generat
 - **Service worker pre-caches the app shell** — full offline use after first load
 - Branded teal theme, 192/512/maskable icons
 
+### 📱 Mobile-friendly
+- Custom date/time inputs scale gracefully on 390 px-wide screens
+- Action buttons stack vertically on mobile (full-width)
+- Work Time / Travel Time tables scroll horizontally instead of being truncated
+- The calendar picker is touch-friendly and stays on-screen
+
+![Mobile view](docs/screenshot-mobile.png)
+
 ### 🧪 Built-in demo
 - **Fill Demo** button loads a complete Stellantis NV scenario
 - Safety confirm before overwriting real data
