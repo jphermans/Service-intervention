@@ -4,6 +4,8 @@ A modern, installable web app for **Atlas Copco service technicians** to generat
 
 ![Form screenshot](docs/screenshot-form.png)
 
+> **Branded throughout** — the official Atlas Copco colour palette (`#0092BC` / RGB 0,146,188), the horizontal **AtlasCopco** wordmark in the header, and a coloured teal bar on every printed PDF page.
+
 ---
 
 ## ✨ Features
@@ -26,25 +28,41 @@ A modern, installable web app for **Atlas Copco service technicians** to generat
 - Date stamps **match the report date** in DD/MM/YYYY format
 - Date stamps preserved on re-print
 
+### 🖼 Images & torque graphs
+- **Optional attachments block** between Notes and Work Time — toggleable when needed, hidden by default
+- **Drag-and-drop** or click-to-browse for image files (PNG, JPG, GIF, SVG, WebP — up to 5 MB each)
+- **Per-image caption** — printed in italics below the image on the PDF
+- **Multiple images** — grid layout, each with thumbnail, caption input, file name, Remove button
+- **Round-trips through JSON** — images stored as base64 data URLs so the saved-to-JSON → load-from-JSON flow preserves them exactly
+- **Prints to PDF** — each image renders full-width between Notes and Work Time with its caption
+- **Carries over on Clone** — unlike signatures (which are session-only), attachments are persisted data so they DO clone with the report
+
+![Attachments section](docs/screenshot-attachments.png)
+
 ### 📦 Reports & data
-- **Save Report** — persists to local storage with signatures + time tables + everything
-- **Save to JSON** — download a portable backup with a descriptive filename (`<customer>_<date>_<id>.json`)
-- **Load from JSON** — round-trip restore of every field
-- **Clone** — copy a saved report into a fresh form
+- **Save Report** — persists to local storage with signatures + attachments + time tables + everything
+- **Save to JSON** — download a portable backup with a descriptive filename (`<customer>_<date>_<id>.json`) — includes base64-encoded images
+- **Load from JSON** — round-trip restore of every field including attachments
+- **Clone** — copy a saved report into a fresh form (images carry over)
 - **Delete** individual or all reports
 
 ### 📄 Print to PDF
-- Branded **teal color header** on the first page — matches the web page header
-- **Atlas Copco logo** in the upper-right of the printed header (placeholder wordmark at `icons/atlas-copco-logo.svg` — drop in the official asset and the layout will size it automatically)
+- Branded **teal colour header** on the first page — matches the web page header
+- **Official AtlasCopco wordmark** in the upper-right of the printed header
+- **Images & Graphs section** between Notes and Work Time when attachments are enabled
 - PDF file gets the **same filename pattern as JSON exports** (`<customer>_<date>_<id>.pdf`) so every saved PDF has a unique, descriptive name
 - 2–3 page A4 layout: form fields + Psets/notes + work/travel/signatures + saved audit trail
 - Compact print styles, hides buttons and decorative chrome
+
+![Printed PDF — page 1 with header + first form fields](docs/screenshot-pdf.png)
+
+![Printed PDF — page 2 with attached torque graph + Work Time](docs/screenshot-pdf-page2.png)
 
 ### 📱 Installable PWA
 - Add to Home Screen on Android / iOS
 - Install as standalone app on desktop Chrome/Edge
 - **Service worker pre-caches the app shell** — full offline use after first load
-- Branded teal theme, 192/512/maskable icons
+- Branded teal theme with the new AtlasCopco wordmark, 192/512/maskable icons
 
 ### 📱 Mobile-friendly
 - Custom date/time inputs scale gracefully on 390 px-wide screens
@@ -90,15 +108,17 @@ Once installed it opens full-screen, runs offline, and behaves like a native app
 1. **Fill the report** — type or paste your data. Every label has a tooltip explaining what to enter.
 2. **Sign** — toggle the signature section, draw on both pads with your finger, mouse, or stylus.
 3. **Track time** — add rows for each work block and travel leg. Durations and totals are calculated automatically.
-4. **Save Report** — the entry appears in the *Saved Reports* list with full details, time tables, and signature thumbnails.
-5. **Print to PDF** — open the browser print dialog and choose *Save as PDF*. The saved file gets the same descriptive name as the JSON export (e.g. `stellantis-nv-aartselaar-plant_2025-12-04_VCXMFB.pdf`) and shows a teal color header on the first page. Hand the file to the customer.
-6. **Back up** — *Save to JSON* downloads a portable file with a descriptive name like `stellantis-nv-aartselaar-plant_2025-12-04_VCXMFB.json` (customer name sanitized, ISO date, report ID). *Load from JSON* restores it on any device.
-7. **Fill Demo** — explore the app with one click (asks for confirmation before overwriting real data).
+4. **Attach images** *(optional)* — toggle the *Add images / torque graphs* block to drop in photos, screenshots, or torque traces. Each image can carry a caption that prints under it on the PDF.
+5. **Save Report** — the entry appears in the *Saved Reports* list with full details, time tables, signature thumbnails, and attachment thumbnails.
+6. **Print to PDF** — open the browser print dialog and choose *Save as PDF*. The saved file gets the same descriptive name as the JSON export (e.g. `stellantis-nv-aartselaar-plant_2025-12-04_VCXMFB.pdf`) and shows the branded teal header with the AtlasCopco wordmark on the first page. Attached images appear between Notes and Work Time. Hand the file to the customer.
+7. **Back up** — *Save to JSON* downloads a portable file with a descriptive name like `stellantis-nv-aartselaar-plant_2025-12-04_VCXMFB.json` (customer name sanitized, ISO date, report ID). Images are embedded as base64 data URLs so they round-trip exactly. *Load from JSON* restores it on any device.
+8. **Fill Demo** — explore the app with one click (asks for confirmation before overwriting real data).
 
 ### Tips
 - The form is a single page — scroll to find any section.
 - After saving, the form resets its **id** and date but keeps your data so you can keep working. Click *Clear* to start truly fresh.
 - Signatures **survive Save Report** — they only wipe on *Clear*, *Clone*, or *Load from JSON*.
+- Attachments **survive Save Report AND Clone** — they're persisted data so they carry over with the report.
 
 ---
 
@@ -107,11 +127,20 @@ Once installed it opens full-screen, runs offline, and behaves like a native app
 ### The filled form
 ![Form](docs/screenshot-form.png)
 
-### Printed PDF — work & travel tables + signatures
-![PDF](docs/screenshot-pdf.png)
+### Images & Graphs attachments section
+![Attachments](docs/screenshot-attachments.png)
+
+### Printed PDF — page 1 (teal header + AtlasCopco wordmark + form fields)
+![PDF page 1](docs/screenshot-pdf.png)
+
+### Printed PDF — page 2 (attached image with caption + Work Time / Travel Time + signatures)
+![PDF page 2](docs/screenshot-pdf-page2.png)
 
 ### Saved report card (in the form view)
 ![Saved card](docs/screenshot-saved-card.png)
+
+### Mobile view (390 px)
+![Mobile](docs/screenshot-mobile.png)
 
 ---
 
@@ -140,7 +169,7 @@ Once installed it opens full-screen, runs offline, and behaves like a native app
 intervention-report/
 ├── index.html                ← the whole app (HTML + CSS + JS)
 ├── manifest.json             ← PWA manifest
-├── sw.js                     ← service worker
+├── sw.js                     ← service worker (pre-caches the app shell)
 ├── icons/
 │   ├── icon.svg              ← source vector for the PWA/app icon
 │   ├── icon-maskable.svg     ← maskable variant
@@ -149,9 +178,16 @@ intervention-report/
 │   ├── icon-maskable-512.png ← adaptive launcher
 │   ├── apple-touch-icon.png  ← iOS home screen (180×180)
 │   ├── favicon-32.png        ← browser tab
-│   └── atlas-copco-logo.svg  ← logo used in the printed PDF header
-│                              (replace with the official Atlas Copco logo)
+│   └── atlas-copco-logo.png  ← official AtlasCopco wordmark used in the
+│                              header (screen + print). Replaceable.
 ├── docs/                     ← screenshots used by this README
+│   ├── screenshot-form.png         ← filled form (web view)
+│   ├── screenshot-attachments.png  ← Images & Graphs section
+│   ├── screenshot-pdf.png          ← printed PDF page 1
+│   ├── screenshot-pdf-page2.png    ← printed PDF page 2 (attachments)
+│   ├── screenshot-mobile.png       ← mobile view (390 px)
+│   ├── screenshot-mobile-calendar.png
+│   └── screenshot-saved-card.png   ← saved report card
 └── .gitignore
 ```
 
@@ -167,7 +203,9 @@ When working on the form:
 2. New time-table rows must call `addTimeRow(tbodyId, data)` — it wires up the auto-calculation.
 3. New persistent fields must be added to `fieldMap` (for `collectFormData` / `fillForm`) and the JSON save handler.
 4. Signatures should always round-trip through `collectSignatures()` / `restoreSignatures()`.
-5. Test offline: open DevTools → Application → Service Workers → check **Offline**, then reload.
+5. Attachments should always round-trip through `collectAttachments()` / `restoreAttachments()` — both are paired and called together in the save/load flow.
+6. When updating the brand colour, derive all CSS variables from one source (the `:root` block) and re-derive the dark/light/tint shades so every component stays in sync.
+7. Test offline: open DevTools → Application → Service Workers → check **Offline**, then reload. Bump `CACHE_VERSION` in `sw.js` when you change the app shell so installed PWAs pick up new assets.
 
 ---
 
