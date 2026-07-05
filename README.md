@@ -51,7 +51,8 @@ A modern, installable web app for **Atlas Copco service technicians** to generat
 - **Official AtlasCopco wordmark** in the upper-right of the printed header
 - **Images & Graphs section** between Notes and Work Time when attachments are enabled
 - PDF file gets the **same filename pattern as JSON exports** (`<customer>_<date>_<id>.pdf`) so every saved PDF has a unique, descriptive name
-- 2–3 page A4 layout: form fields + Psets/notes + work/travel/signatures + saved audit trail
+- 2–3 page A4 layout: form fields + Psets/notes + work/travel/signatures
+- **Saved Reports section is hidden in print** — the PDF only contains the current report, never data from other customers or interventions
 - Compact print styles, hides buttons and decorative chrome
 
 ![Printed PDF — page 1 with header + first form fields](docs/screenshot-pdf.png)

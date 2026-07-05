@@ -716,15 +716,11 @@
             margin: 8px 0 16px;
         }
 
-        /* Print: always expand the saved reports so the audit trail prints
-           even if the user collapsed the section in the form view. */
+        /* Print: hide the entire Saved Reports section. The printed PDF is
+           a single-report document for the customer — saved reports from
+           other customers/interventions must never appear on the printout. */
         @media print {
-            .reports-section { box-shadow: none; border: none; }
-            .reports-section.is-empty { display: none !important; }
-            .reports-header { background: none !important; border-bottom: 1px solid #ccc; }
-            .reports-chevron, .reports-hint { display: none; }
-            .reports-body { display: block !important; padding: 0; border-top: none; }
-            .reports-section[data-collapsed="true"] .reports-body { display: block !important; }
+            .reports-section { display: none !important; }
         }
         .report-item {
             background: #fff;
