@@ -2,7 +2,7 @@
 // Strategy: cache-first for app shell (so the app works fully offline once installed),
 // network-first with cache fallback for everything else.
 
-const CACHE_VERSION = 'ac-intervention-v7';
+const CACHE_VERSION = 'ac-intervention-v8';
 const APP_SHELL = [
   './',
   './index.html',

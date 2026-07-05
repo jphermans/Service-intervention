@@ -1676,6 +1676,10 @@
                     <label for="technicianEmail" title="Your work email address for follow-up correspondence about this report.">Email</label>
                     <input type="email" id="technicianEmail">
                 </div>
+                <div class="field full">
+                    <label for="serviceOrder" title="The internal service order / work order number associated with this intervention, e.g. 'SO-2025-04821'. Used for tracking and billing.">Service Order</label>
+                    <input type="text" id="serviceOrder" placeholder="e.g. SO-2025-04821">
+                </div>
             </div>
 
             <div class="section-title">Equipment</div>
@@ -2114,6 +2118,7 @@
                     <div class="group">
                         <div class="group-label">Technician</div>
                         <div class="row"><strong>${val(r.technician)}</strong> &nbsp;|&nbsp; Email: ${val(r.technicianEmail)}</div>
+                        <div class="row">Service Order: ${val(r.serviceOrder)}</div>
                     </div>
                     <div class="group">
                         <div class="group-label">Equipment</div>
@@ -2300,6 +2305,7 @@
             customerAddress: 'customerAddress',
             technician: 'technicianName',
             technicianEmail: 'technicianEmail',
+            serviceOrder: 'serviceOrder',
             controller: 'controller',
             controllerSerial: 'controllerSerial',
             controllerFirmware: 'controllerFirmware',
@@ -2849,6 +2855,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
             // -- Technician --
             document.getElementById('technicianName').value = 'Pieter Peeters';
             document.getElementById('technicianEmail').value = 'p.peeters@atlascopco.com';
+            document.getElementById('serviceOrder').value = 'SO-2025-04821';
 
             // -- Equipment --
             document.getElementById('controller').value = 'Power Focus 6000';
