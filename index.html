@@ -298,6 +298,13 @@
                 font-size: 10pt !important;
                 border-radius: 0 !important;
             }
+            /* Notes textarea: add a fine but visible border so the free-text
+               content is clearly delimited on the printed PDF. */
+            #notes {
+                border: 0.5pt solid #5b6770 !important;
+                padding: 4pt 6pt !important;
+                min-height: 40pt;
+            }
             input[readonly] { color: #5b6770 !important; font-style: italic; }
             .field { margin-bottom: 4pt !important; break-inside: avoid; page-break-inside: avoid; }
             .grid { gap: 4pt 8pt !important; }
