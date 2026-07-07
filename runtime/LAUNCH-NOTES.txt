@@ -1,0 +1,19 @@
+Atlas Copco Intervention Report
+
+Start from the project root:
+
+macOS:
+  double-click launch-macos.command
+
+Windows:
+  double-click launch-windows.bat
+
+Shell:
+  ./serve.sh
+
+The app stores data in:
+  ./data/intervention_reports.sqlite3
+
+Optional offline Python runtime locations:
+  runtime/python/bin/python3   (macOS/Linux)
+  runtime/python/python.exe    (Windows)

@@ -36,6 +36,8 @@ intervention_reports.sqlite3-*
 runtime/*
 !runtime/.gitkeep
 !runtime/README.md
+!runtime/LAUNCH-NOTES.txt
+!runtime/USB-STICK-CHECKLIST.md
 !runtime/python/
 runtime/python/*
 !runtime/python/.gitkeep

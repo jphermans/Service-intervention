@@ -40,3 +40,5 @@ runtime/
 - Keep the runtime local to the stick; do not commit the interpreter files.
 - The database lives in `./data/intervention_reports.sqlite3`.
 - If you bundle a runtime, test both macOS and Windows launchers once on the target OS.
+- See `LAUNCH-NOTES.txt` for a quick user-facing start guide.
+- See `USB-STICK-CHECKLIST.md` for the packaging checklist.
