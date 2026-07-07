@@ -738,11 +738,24 @@
         }
         .reports-section.is-empty .reports-toolbar #clearAllBtn,
         .reports-section.is-empty .reports-toolbar #exportAllBtn { display: none; }
+        .reports-help {
+            margin: 10px 0 14px;
+            padding: 10px 12px;
+            border-left: 3px solid var(--ac-primary);
+            background: #f7fbfd;
+            color: var(--ac-charcoal);
+            font-size: 0.88rem;
+            line-height: 1.45;
+            border-radius: 4px;
+        }
+        .reports-help strong {
+            color: var(--ac-primary-dark);
+        }
         .reports-empty-msg {
             font-size: 0.88rem;
             color: var(--ac-grey);
+            margin: 16px 0 4px;
             font-style: italic;
-            margin: 8px 0 16px;
         }
 
         /* Print: hide the entire Saved Reports section. The printed PDF is
@@ -2008,6 +2021,9 @@
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Clear All
                     </button>
+                </div>
+                <div class="reports-help">
+                    <strong>Open</strong> a saved card to edit or print the same record. Use <strong>Clone</strong> only when you want a new report that starts from the old one but gets a fresh Report ID.
                 </div>
                 <div id="reportList"></div>
             </div>
