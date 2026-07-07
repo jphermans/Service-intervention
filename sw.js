@@ -7,7 +7,7 @@
 // page instantly, AND get the latest version on their NEXT visit — without
 // needing a manual cache-version bump for every deploy.
 
-const CACHE_VERSION = 'ac-intervention-v13';
+const CACHE_VERSION = 'ac-intervention-v15';
 const APP_SHELL = [
   './',
   './index.html',
@@ -63,12 +63,17 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
         }
         return response;
-      }).catch(() => caches.match(req))
+      }).catch(() => caches.match(req).then((cached) => cached || new Response('', { status: 504, statusText: 'Offline' })))
     );
     return;
   }
 
   // Same-origin requests:
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
   const isHTML = req.mode === 'navigate' ||
     (req.headers.get('accept') || '').includes('text/html');
 
@@ -111,6 +116,7 @@ self.addEventListener('fetch', (event) => {
         if (req.mode === 'navigate') {
           return caches.match('./index.html');
         }
+        return new Response('', { status: 504, statusText: 'Offline' });
       });
     })
   );

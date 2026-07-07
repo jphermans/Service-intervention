@@ -24,3 +24,12 @@ test-output/
 
 # Local Python http server logs (used during manual testing only)
 *.log
+
+# Local SQLite database created by server.py; keep it beside the site/USB stick,
+# but out of source control.
+data/
+intervention_reports.sqlite3
+intervention_reports.sqlite3-*
+
+# Optional bundled runtime for fully offline USB-stick use.
+runtime/

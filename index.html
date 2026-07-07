@@ -33,6 +33,17 @@
             --ac-grey: #5b6770;
         }
         * { box-sizing: border-box; }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
         body {
             font-family: "Segoe UI", Arial, sans-serif;
             margin: 0;
@@ -123,6 +134,16 @@
         }
         button svg { flex-shrink: 0; }
         button:hover { background: var(--ac-primary-dark); }
+        button:focus-visible,
+        .attachment-dropzone:focus-visible {
+            outline: 3px solid var(--ac-primary-light);
+            outline-offset: 2px;
+        }
+        button:disabled,
+        select:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
         button.secondary { background: transparent; color: var(--ac-primary); border: 1px solid var(--ac-primary); }
         button.secondary:hover { background: var(--ac-tint); }
 
@@ -1385,6 +1406,7 @@
             cursor: pointer;
             transition: background 0.15s, border-color 0.15s;
             background: #fafcfd;
+            min-height: 96px;
         }
         .attachment-dropzone:hover,
         .attachment-dropzone.dragover {
@@ -1617,7 +1639,11 @@
         /* ===== Mobile responsive (all @media max-width:600px rules consolidated) ===== */
         @media (max-width: 600px) {
             /* Layout & typography */
+            header { padding: 16px 0; }
+            header .inner { align-items: flex-start; gap: 10px; }
             header h1 { font-size: 1.3rem; }
+            header .subtitle { font-size: 0.86rem; }
+            header .header-logo { height: 44px; max-width: 124px; }
             .container { padding: 0 12px; }
             form { padding: 18px; }
             .grid { grid-template-columns: 1fr; gap: 0; }
@@ -1631,6 +1657,26 @@
             .report-item { padding: 14px; }
             .field { margin-bottom: 12px; }
             .report-item .row { font-size: 0.88rem; }
+            .inline-group { flex-direction: column; }
+            .inline-group button,
+            .reports-toolbar button,
+            .attachments-toolbar button {
+                width: 100%;
+                justify-content: center;
+            }
+            .reports-header { align-items: flex-start; gap: 10px; }
+            .reports-hint { display: none; }
+            .modal-actions { flex-direction: column-reverse; }
+            .modal-actions button {
+                width: 100%;
+                justify-content: center;
+            }
+            #toast {
+                left: 12px;
+                right: 12px;
+                top: 12px;
+            }
+            .toast { max-width: none; }
 
             /* Time tables */
             .time-table .col-time-label,
@@ -1669,7 +1715,7 @@
         </div>
     </header>
 
-    <div class="container">
+    <main class="container">
         <form id="interventionForm">
             <div class="section-title">Report</div>
             <div class="grid">
@@ -1680,8 +1726,9 @@
                 <div class="field">
                     <label for="reportDate" title="Date of the intervention. Click the calendar icon to pick a date, or type in DD/MM/YYYY format (e.g. 04/12/2025).">Report date</label>
                     <div class="custom-date-wrapper">
-                        <input type="text" id="reportDate" class="custom-date-input" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" inputmode="numeric">
-                        <button type="button" class="custom-date-btn" id="reportDateBtn" tabindex="-1" aria-label="Open calendar">
+                        <input type="text" id="reportDate" class="custom-date-input" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" inputmode="numeric" aria-describedby="reportDateFormat">
+                        <span id="reportDateFormat" class="sr-only">Use DD/MM/YYYY format.</span>
+                        <button type="button" class="custom-date-btn" id="reportDateBtn" aria-label="Open report date calendar" aria-haspopup="dialog" aria-expanded="false" aria-controls="active-cal-popup">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         </button>
                     </div>
@@ -1704,23 +1751,23 @@
             <div class="grid">
                 <div class="field full">
                     <label for="customerName" title="Company or organization name, e.g. 'Stellantis NV' or 'Atlas Copco Service Center'.">Customer Name</label>
-                    <input type="text" id="customerName" maxlength="40" required>
+                    <input type="text" id="customerName" maxlength="40" required autocomplete="organization">
                 </div>
                 <div class="field">
                     <label for="customerContact" title="On-site contact person who can answer questions about the equipment and signs the report.">Contact Name</label>
-                    <input type="text" id="customerContact">
+                    <input type="text" id="customerContact" autocomplete="name">
                 </div>
                 <div class="field">
                     <label for="customerPhone" title="Best phone number to reach the contact, including country code, e.g. '+32 3 555 0123'.">Phone</label>
-                    <input type="tel" id="customerPhone">
+                    <input type="tel" id="customerPhone" autocomplete="tel">
                 </div>
                 <div class="field">
                     <label for="customerEmail" title="Contact's email address for sending the signed report.">Email</label>
-                    <input type="email" id="customerEmail">
+                    <input type="email" id="customerEmail" autocomplete="email">
                 </div>
                 <div class="field full">
                     <label for="customerAddress" title="Full site address including street, postal code, city, and country — where the intervention took place.">Address</label>
-                    <textarea id="customerAddress" rows="2"></textarea>
+                    <textarea id="customerAddress" rows="2" autocomplete="street-address"></textarea>
                 </div>
             </div>
 
@@ -1728,11 +1775,11 @@
             <div class="grid">
                 <div class="field">
                     <label for="technicianName" title="Your full name as the service technician performing this intervention.">Technician Name</label>
-                    <input type="text" id="technicianName" required>
+                    <input type="text" id="technicianName" required autocomplete="name">
                 </div>
                 <div class="field">
                     <label for="technicianEmail" title="Your work email address for follow-up correspondence about this report.">Email</label>
-                    <input type="email" id="technicianEmail">
+                    <input type="email" id="technicianEmail" autocomplete="email">
                 </div>
                 <div class="field full">
                     <label for="serviceOrder" title="The internal service order / work order number associated with this intervention, e.g. 'SO-2025-04821'. Used for tracking and billing.">Service Order</label>
@@ -1789,7 +1836,7 @@
 
             <div class="attachment-toggle-row">
                 <label title="Show or hide the image / torque-graph attachments section. Each image is stored as base64 and survives Save Report, JSON export, and the printed PDF.">
-                    <input type="checkbox" id="enableAttachments">
+                    <input type="checkbox" id="enableAttachments" aria-controls="attachmentsSection" aria-expanded="false">
                     <span>Add images / torque graphs</span>
                 </label>
                 <div class="attachment-hint">Attach photos, screenshots, or torque graphs to document the intervention. Stored with the report, included in the printed PDF, and exported with the JSON backup.</div>
@@ -1802,7 +1849,7 @@
                     <input type="file" id="attachmentFileInput" accept="image/*" multiple hidden>
                     <span class="attachment-count" id="attachmentCount">0 images</span>
                 </div>
-                <div class="attachment-dropzone" id="attachmentDropzone" title="Click to browse, or drop image files here.">
+                <div class="attachment-dropzone" id="attachmentDropzone" title="Click to browse, or drop image files here." role="button" tabindex="0" aria-label="Add images by browsing or dropping files">
                     <strong>Drop images here</strong> &nbsp;or click to browse
                     <div style="font-size: 0.78rem; margin-top: 6px; opacity: 0.8;">PNG, JPG, GIF, SVG, WebP — up to ~5 MB each</div>
                 </div>
@@ -1810,9 +1857,10 @@
             </div>
 
             <div class="section-title">Work Time</div>
-            <p class="field-hint">Record the time you actually worked on the intervention. Multiple rows let you split a session (e.g., diagnose → repair → test).</p>
+            <p class="field-hint" id="workTimeHint">Record the time you actually worked on the intervention. Multiple rows let you split a session (e.g., diagnose → repair → test).</p>
             <div class="time-table-scroll">
-                <table class="time-table">
+                <table class="time-table" aria-describedby="workTimeHint">
+                    <caption class="sr-only">Work time entries</caption>
                     <thead>
                     <tr>
                         <th class="col-time-label" title="A short label for this block of work, e.g. 'Diagnosis', 'Firmware replacement', 'Calibration check'.">Activity</th>
@@ -1838,9 +1886,10 @@
             </button>
 
             <div class="section-title">Travel Time</div>
-            <p class="field-hint">Record the travel to and from the site. Multiple rows for outbound and return trips.</p>
+            <p class="field-hint" id="travelTimeHint">Record the travel to and from the site. Multiple rows for outbound and return trips.</p>
             <div class="time-table-scroll">
-                <table class="time-table">
+                <table class="time-table" aria-describedby="travelTimeHint">
+                    <caption class="sr-only">Travel time entries</caption>
                     <thead>
                         <tr>
                             <th class="col-time-label" title="Which trip this row covers, e.g. 'Outbound to site', 'Return to office'. Add one row per trip.">Trip</th>
@@ -1867,7 +1916,7 @@
 
             <div class="signature-toggle-row">
                 <label title="Show or hide the signature section. Signatures are saved with the report and stay on the form until you Clone or Clear.">
-                    <input type="checkbox" id="enableSignatures">
+                    <input type="checkbox" id="enableSignatures" aria-controls="signaturesSection" aria-expanded="false">
                     <span>Add signature section</span>
                 </label>
                 <div class="signature-hint">Draw signatures with mouse, touch, or pen. They are saved with the report (visible on the saved card) and stay on the form until you Clone or Clear.</div>
@@ -1927,7 +1976,7 @@
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6l-1 2h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5l-1-2z"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
                     Fill Demo
                 </button>
-                <button type="button" class="secondary help-btn" id="helpToggleBtn" title="Show or hide help text under every field.">
+                <button type="button" class="secondary help-btn" id="helpToggleBtn" title="Show or hide help text under every field." aria-pressed="false">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     Help
                 </button>
@@ -1963,7 +2012,7 @@
                 <div id="reportList"></div>
             </div>
         </section>
-    </div>
+    </main>
 
     <script>
         const form = document.getElementById('interventionForm');
@@ -1972,7 +2021,8 @@
         const cloneSourceEl = document.getElementById('cloneSource');
         let lastSavedReport = null;
 
-        function val(v) { return v && v.trim() ? v : '—'; }
+        function rawVal(v) { return v && String(v).trim() ? String(v) : '—'; }
+        function val(v) { return escapeHtml(rawVal(v)); }
 
         function newId() {
             // 6-char base36 ID (0-9, A-Z) → 36^6 = ~2.18 billion combinations.
@@ -2024,9 +2074,119 @@
             }
         };
 
-        function getReports() { return JSON.parse(storage.get('reports', '[]')); }
-        function saveReports(reports) { return storage.set('reports', JSON.stringify(reports)); }
-        function clearReports() { storage.remove('reports'); }
+        function readLocalReports() {
+            try {
+                const parsed = JSON.parse(storage.get('reports', '[]'));
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (err) {
+                console.warn('Ignoring invalid reports storage:', err);
+                return [];
+            }
+        }
+
+        const reportApi = {
+            available: false,
+            warnedOffline: false
+        };
+        let reportCache = readLocalReports();
+
+        function getReports() {
+            return Array.isArray(reportCache) ? reportCache : [];
+        }
+
+        function setReportCache(reports) {
+            reportCache = Array.isArray(reports) ? reports : [];
+            storage.set('reports', JSON.stringify(reportCache));
+            return reportCache;
+        }
+
+        async function apiRequest(path, options) {
+            options = options || {};
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), options.timeout || 2500);
+            try {
+                const fetchOptions = {
+                    method: options.method || 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store',
+                    signal: controller.signal
+                };
+                if (options.body !== undefined) {
+                    fetchOptions.headers['Content-Type'] = 'application/json';
+                    fetchOptions.body = JSON.stringify(options.body);
+                }
+                const response = await fetch(path, fetchOptions);
+                const text = await response.text();
+                const data = text ? JSON.parse(text) : {};
+                if (!response.ok) {
+                    throw new Error(data.error || `Server returned ${response.status}`);
+                }
+                return data;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        async function initReportStorage() {
+            const localReports = readLocalReports();
+            try {
+                await apiRequest('/api/health', { timeout: 1200 });
+                reportApi.available = true;
+                let data = await apiRequest('/api/reports');
+                let serverReports = Array.isArray(data.reports) ? data.reports : [];
+                if (localReports.length && !serverReports.length) {
+                    data = await apiRequest('/api/import', {
+                        method: 'POST',
+                        body: { mode: 'replace', reports: localReports }
+                    });
+                    serverReports = Array.isArray(data.reports) ? data.reports : localReports;
+                }
+                setReportCache(serverReports);
+                return true;
+            } catch (err) {
+                reportApi.available = false;
+                setReportCache(localReports);
+                console.warn('Local report API unavailable; using browser storage:', err);
+                return false;
+            }
+        }
+
+        async function saveReports(reports) {
+            reports = Array.isArray(reports) ? reports : [];
+            if (reportApi.available) {
+                try {
+                    const data = await apiRequest('/api/import', {
+                        method: 'POST',
+                        body: { mode: 'replace', reports: reports }
+                    });
+                    setReportCache(Array.isArray(data.reports) ? data.reports : reports);
+                    return true;
+                } catch (err) {
+                    reportApi.available = false;
+                    console.warn('Report API write failed; falling back to browser storage:', err);
+                    if (!reportApi.warnedOffline && typeof showToast === 'function') {
+                        showToast('Local server unavailable — using browser storage', 'warn');
+                        reportApi.warnedOffline = true;
+                    }
+                }
+            }
+            const saved = storage.set('reports', JSON.stringify(reports));
+            if (saved) setReportCache(reports);
+            return saved;
+        }
+
+        async function clearReports() {
+            if (reportApi.available) {
+                try {
+                    await apiRequest('/api/reports', { method: 'DELETE' });
+                } catch (err) {
+                    reportApi.available = false;
+                    console.warn('Report API clear failed; falling back to browser storage:', err);
+                }
+            }
+            storage.remove('reports');
+            setReportCache([]);
+        }
 
         // Toast notifications — give the user visible feedback for every action
         const toastRoot = document.getElementById('toast');
@@ -2167,7 +2327,7 @@
             return `${makeFilenameBase(data)}.json`;
         }
 
-        function loadReports() {
+        async function loadReports() {
             const reports = getReports();
             // Backfill unique IDs for reports saved before the id field existed
             let changed = false;
@@ -2177,7 +2337,7 @@
                     changed = true;
                 }
             });
-            if (changed) saveReports(reports);
+            if (changed) await saveReports(reports);
             refreshCloneSource();
             // Update the collapsible header (count + visibility) before rendering
             updateReportsHeader(reports.length);
@@ -2266,7 +2426,7 @@
             if (cloneBtn) cloneBtn.disabled = false;
             cloneSourceEl.innerHTML = '<option value="">— Select a report to clone —</option>' +
                 reports.map(r => {
-                    const label = `${formatDateTimeDDMMYYYY(r.date)} — ${val(r.customer)} (${(r.id || '').slice(0, 8)})`;
+                    const label = `${formatDateTimeDDMMYYYY(r.date)} — ${rawVal(r.customer)} (${(r.id || '').slice(0, 8)})`;
                     return `<option value="${escapeHtml(r.id)}">${escapeHtml(label)}</option>`;
                 }).join('');
         }
@@ -2293,7 +2453,7 @@
             form.classList.add('flash');
         }
 
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newReport = collectFormData();
             // Use whatever ID is currently shown in the form (auto-managed)
@@ -2313,7 +2473,7 @@
             newReport.attachments = collectAttachments();
             const reports = getReports();
             reports.push(newReport);
-            const saved = saveReports(reports);
+            const saved = await saveReports(reports);
             if (!saved) {
                 // localStorage quota exceeded (too many attachments) or Safari private mode.
                 // The report is NOT persisted — warn clearly and offer a JSON download
@@ -2321,10 +2481,11 @@
                 showToast('⚠ Storage full — report NOT saved. Downloading JSON backup…', 'error');
                 downloadJson(newReport);
                 lastSavedReport = newReport;
+                if (typeof markFormDirty === 'function') markFormDirty();
                 return;
             }
             lastSavedReport = newReport;
-            loadReports();
+            await loadReports();
             // Assign a fresh ID for the next entry — but DO NOT clear signatures.
             // They stay until the user explicitly clones or clears the form.
             setReportId();
@@ -2332,6 +2493,7 @@
             toggleReportsSection(false);
             // Visible feedback: toast + scroll to the new card + flash highlight
             showToast('✓ Report saved (signatures preserved)', 'success');
+            if (typeof markFormClean === 'function') markFormClean();
             const newCard = document.querySelector(`.report-item [data-id="${newReport.id}"]`)?.closest('.report-item');
             if (newCard) {
                 newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2350,6 +2512,7 @@
             if (clearCustomerBtn) clearCustomerBtn.click();
             if (clearTechnicianBtn) clearTechnicianBtn.click();
             enableSignaturesEl.checked = false;
+            enableSignaturesEl.setAttribute('aria-expanded', 'false');
             signaturesSectionEl.hidden = true;
             signaturesSectionEl.removeAttribute('data-print');
             syncSignatureNames();
@@ -2369,6 +2532,7 @@
                 // Clear attachments too
                 attachments = [];
                 enableAttachmentsEl.checked = false;
+                enableAttachmentsEl.setAttribute('aria-expanded', 'false');
                 attachmentsSectionEl.hidden = true;
                 attachmentsSectionEl.removeAttribute('data-print');
                 renderAttachments();
@@ -2421,6 +2585,7 @@
         }
 
         function fillForm(data) {
+            data = data && typeof data === 'object' ? data : {};
             for (const [key, id] of Object.entries(fieldMap)) {
                 const el = document.getElementById(id);
                 if (!el || data[key] === undefined) continue;
@@ -2466,10 +2631,10 @@
             data = data || {};
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="col-step"><input type="text" class="step-name" value="${escapeHtml(data.step || '')}" placeholder="e.g. Torque step 3"></td>
-                <td class="col-before"><input type="text" class="step-before" value="${escapeHtml(data.before || '')}" placeholder="e.g. 45 Nm"></td>
-                <td class="col-after"><input type="text" class="step-after" value="${escapeHtml(data.after || '')}" placeholder="e.g. 42 Nm"></td>
-                <td class="col-remove"><button type="button" class="remove-row">Remove</button></td>
+                <td class="col-step"><input type="text" class="step-name" value="${escapeHtml(data.step || '')}" placeholder="e.g. Torque step 3" aria-label="Optimization step name"></td>
+                <td class="col-before"><input type="text" class="step-before" value="${escapeHtml(data.before || '')}" placeholder="e.g. 45 Nm" aria-label="Value before optimization"></td>
+                <td class="col-after"><input type="text" class="step-after" value="${escapeHtml(data.after || '')}" placeholder="e.g. 42 Nm" aria-label="Value after optimization"></td>
+                <td class="col-remove"><button type="button" class="remove-row" aria-label="Remove optimization step">Remove</button></td>
             `;
             tr.querySelector('.remove-row').addEventListener('click', () => {
                 tr.remove();
@@ -2483,12 +2648,13 @@
         function addPset(data) {
             data = data || {};
             const block = document.createElement('div');
+            const psetId = 'psetName-' + Math.random().toString(36).slice(2, 9);
             block.className = 'pset-block';
             block.innerHTML = `
                 <div class="pset-block-header">
-                    <label>Pset name</label>
-                    <input type="text" class="pset-name" value="${escapeHtml(data.pset || '')}" placeholder="e.g. Joint 1 — Wheel hub">
-                    <button type="button" class="remove-pset">Remove Pset</button>
+                    <label for="${psetId}">Pset name</label>
+                    <input type="text" class="pset-name" id="${psetId}" value="${escapeHtml(data.pset || '')}" placeholder="e.g. Joint 1 — Wheel hub">
+                    <button type="button" class="remove-pset" aria-label="Remove Pset">Remove Pset</button>
                 </div>
                 <table class="steps-table">
                     <thead>
@@ -2698,6 +2864,8 @@ function openCalendar(anchorEl, currentIso, onSelect) {
     // Close any existing popup
     const existing = document.getElementById('active-cal-popup');
     if (existing) existing.remove();
+    const triggerBtn = document.getElementById(anchorEl.id + 'Btn');
+    if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'true');
 
     const today = new Date();
     let viewYear, viewMonth;
@@ -2781,6 +2949,8 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                 + (isCursor ? ' focus' : '');
             btn.textContent = d.getDate();
             btn.dataset.iso = iso;
+            btn.setAttribute('aria-label', d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+            btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
             btn.addEventListener('click', () => {
                 selectedIso = iso;
                 onSelect(iso);
@@ -2792,6 +2962,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
 
     function close() {
         popup.remove();
+        if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'false');
         document.removeEventListener('mousedown', onDocClick);
         document.removeEventListener('keydown', onKey);
     }
@@ -3043,12 +3214,16 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         function addTimeRow(tbodyId, data) {
             data = data || {};
             const tr = document.createElement('tr');
+            const isWork = tbodyId === 'workTimeRows';
+            const labelText = isWork ? 'Activity' : 'Trip';
+            const startText = isWork ? 'Start time' : 'Departure time';
+            const endText = isWork ? 'End time' : 'Arrival time';
             tr.innerHTML = `
-                <td><input type="text" class="time-label" value="${escapeHtml(data.label || '')}" placeholder="e.g. Diagnosis"></td>
-                <td><input type="text" class="custom-time time-start" placeholder="HH:MM" maxlength="5" autocomplete="off" inputmode="numeric"></td>
-                <td><input type="text" class="custom-time time-end" placeholder="HH:MM" maxlength="5" autocomplete="off" inputmode="numeric"></td>
-                <td class="time-dur empty" data-dur>—</td>
-                <td class="col-time-rm"><button type="button" class="remove-row">Remove</button></td>
+                <td><input type="text" class="time-label" value="${escapeHtml(data.label || '')}" placeholder="e.g. Diagnosis" aria-label="${labelText}"></td>
+                <td><input type="text" class="custom-time time-start" placeholder="HH:MM" maxlength="5" autocomplete="off" inputmode="numeric" aria-label="${startText}"></td>
+                <td><input type="text" class="custom-time time-end" placeholder="HH:MM" maxlength="5" autocomplete="off" inputmode="numeric" aria-label="${endText}"></td>
+                <td class="time-dur empty" data-dur aria-live="polite">—</td>
+                <td class="col-time-rm"><button type="button" class="remove-row" aria-label="Remove ${isWork ? 'work' : 'travel'} time row">Remove</button></td>
             `;
             const startEl = tr.querySelector('.time-start');
             const endEl = tr.querySelector('.time-end');
@@ -3334,6 +3509,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         // 5 MB is generous for screenshots and most torque-graph exports.
         const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
         const ATTACHMENT_ACCEPT = /^image\//;
+        const ATTACHMENT_DATA_URL = /^data:image\/[a-zA-Z0-9.+-]+;base64,/;
 
         let attachments = []; // in-memory list of {id, name, caption, dataUrl}
 
@@ -3361,10 +3537,11 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                         <input type="text" class="attachment-caption" data-idx="${idx}"
                                placeholder="Caption (e.g. 'Torque graph – Joint 1')"
                                value="${escapeHtml(att.caption || '')}"
-                               title="Optional caption. Printed below the image on the PDF.">
+                               title="Optional caption. Printed below the image on the PDF."
+                               aria-label="Caption for ${escapeHtml(att.name || 'image')}">
                         <div class="attachment-footer">
                             <span>${escapeHtml(att.name || 'image')}</span>
-                            <button type="button" class="attachment-remove" data-id="${att.id}" title="Remove this image">Remove</button>
+                            <button type="button" class="attachment-remove" data-id="${att.id}" title="Remove this image" aria-label="Remove ${escapeHtml(att.name || 'image')}">Remove</button>
                         </div>
                     </div>
                 `;
@@ -3414,6 +3591,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                 // Auto-open the section when the user adds their first image
                 if (!enableAttachmentsEl.checked) {
                     enableAttachmentsEl.checked = true;
+                    enableAttachmentsEl.setAttribute('aria-expanded', 'true');
                     attachmentsSectionEl.hidden = false;
                 }
                 showToast(added === 1 ? 'Image added' : added + ' images added', 'success');
@@ -3428,6 +3606,12 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         // Wire the file input + button + dropzone
         addAttachmentBtnEl.addEventListener('click', () => attachmentFileInputEl.click());
         attachmentDropzoneEl.addEventListener('click', () => attachmentFileInputEl.click());
+        attachmentDropzoneEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                attachmentFileInputEl.click();
+            }
+        });
         attachmentFileInputEl.addEventListener('change', () => {
             addFiles(attachmentFileInputEl.files);
             attachmentFileInputEl.value = ''; // allow re-picking the same file
@@ -3468,6 +3652,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
 
         enableAttachmentsEl.addEventListener('change', () => {
             attachmentsSectionEl.hidden = !enableAttachmentsEl.checked;
+            enableAttachmentsEl.setAttribute('aria-expanded', enableAttachmentsEl.checked ? 'true' : 'false');
             if (enableAttachmentsEl.checked) {
                 attachmentsSectionEl.setAttribute('data-print', 'on');
             } else {
@@ -3494,6 +3679,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         function restoreAttachments(att) {
             const enabled = att && att.enabled === true;
             enableAttachmentsEl.checked = enabled;
+            enableAttachmentsEl.setAttribute('aria-expanded', enabled ? 'true' : 'false');
             attachmentsSectionEl.hidden = !enabled;
             if (enabled) attachmentsSectionEl.setAttribute('data-print', 'on');
             if (!enabled || !Array.isArray(att.items)) {
@@ -3506,7 +3692,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                 name: a.name || '',
                 caption: a.caption || '',
                 dataUrl: a.dataUrl
-            })).filter(a => a.dataUrl);
+            })).filter(a => a.dataUrl && ATTACHMENT_DATA_URL.test(a.dataUrl));
             renderAttachments();
             return Promise.resolve();
         }
@@ -3671,10 +3857,12 @@ function openCalendar(anchorEl, currentIso, onSelect) {
 
         // Restore signatures from saved data (used on JSON load).
         async function restoreSignatures(sigs) {
+            sigs = sigs && typeof sigs === 'object' ? sigs : { enabled: false };
             // If the JSON says signatures are disabled, keep the section hidden.
             // If enabled (or the field is missing), show the section.
             const enabled = sigs.enabled !== false;
             enableSignaturesEl.checked = enabled;
+            enableSignaturesEl.setAttribute('aria-expanded', enabled ? 'true' : 'false');
             signaturesSectionEl.hidden = !enabled;
             syncSignatureNames();
             if (!enabled) return;
@@ -3715,6 +3903,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         enableSignaturesEl.addEventListener('change', () => {
             const on = enableSignaturesEl.checked;
             signaturesSectionEl.hidden = !on;
+            enableSignaturesEl.setAttribute('aria-expanded', on ? 'true' : 'false');
             if (on) {
                 syncSignatureNames();
                 // Only fill today's date if the date is empty — preserves a restored signing date
@@ -3810,6 +3999,9 @@ function openCalendar(anchorEl, currentIso, onSelect) {
             reader.onload = async (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result);
+                    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                        throw new Error('Expected a single report object');
+                    }
                     fillForm(data);
                     // Restore signatures if the JSON has them; otherwise clear the pads
                     if (data.signatures) {
@@ -3873,14 +4065,14 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                     message: 'This permanently removes the report from this browser. This cannot be undone.',
                     confirmText: 'Delete',
                     danger: true
-                }).then(ok => {
+                }).then(async ok => {
                     if (!ok) return;
                     const reports = getReports();
                     const idx = reports.findIndex(r => r.id === id);
                     if (idx !== -1) {
                         reports.splice(idx, 1);
-                        saveReports(reports);
-                        loadReports();
+                        await saveReports(reports);
+                        await loadReports();
                         showToast('Report deleted', 'warn');
                     }
                 });
@@ -3921,7 +4113,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = async (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result);
                     // Accept both backup format ({reports: [...]}) and plain arrays
@@ -3950,12 +4142,12 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                         seen.add(r.id);
                         return true;
                     });
-                    const saved = saveReports(deduped);
+                    const saved = await saveReports(deduped);
                     if (!saved) {
                         showToast('⚠ Storage full — not all reports could be imported', 'error');
                         return;
                     }
-                    loadReports();
+                    await loadReports();
                     showToast(`✓ Imported ${added} report${added === 1 ? '' : 's'}${skipped ? ` (${skipped} duplicate${skipped === 1 ? '' : 's'} skipped)` : ''}`, 'success');
                 } catch (err) {
                     showToast('Invalid backup file: ' + err.message, 'error');
@@ -3973,10 +4165,10 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                 message: 'This permanently removes every saved report from this browser. Consider using Export All first if you want to keep a copy. This cannot be undone.',
                 confirmText: 'Delete All',
                 danger: true
-            }).then(ok => {
+            }).then(async ok => {
                 if (!ok) return;
-                clearReports();
-                loadReports();
+                await clearReports();
+                await loadReports();
                 showToast('All reports deleted', 'warn');
             });
         });
@@ -4029,7 +4221,15 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         // Restore Saved Reports collapse state, then render
         const savedCollapsed = storage.get('reportsCollapsed') === 'true';
         document.getElementById('reportsSection').dataset.collapsed = savedCollapsed ? 'true' : 'false';
-        loadReports();
+        (async () => {
+            const usingApi = await initReportStorage();
+            // Re-roll after the API cache loads so generated IDs avoid SQLite reports too.
+            setReportId();
+            await loadReports();
+            if (usingApi) {
+                console.log('Using local SQLite report database');
+            }
+        })();
 
         // Click and keyboard handlers for the Saved Reports toggle header
         const reportsHeaderEl = document.getElementById('reportsHeader');
@@ -4065,10 +4265,12 @@ function openCalendar(anchorEl, currentIso, onSelect) {
             if (storage.get('helpVisible') === 'true') {
                 form.classList.add('form-help-on');
                 helpBtn.classList.add('active');
+                helpBtn.setAttribute('aria-pressed', 'true');
             }
             helpBtn.addEventListener('click', () => {
                 const isOn = form.classList.toggle('form-help-on');
                 helpBtn.classList.toggle('active', isOn);
+                helpBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
                 storage.set('helpVisible', isOn ? 'true' : 'false');
             });
         })();

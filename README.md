@@ -40,7 +40,7 @@ A modern, installable web app for **Atlas Copco service technicians** to generat
 ![Attachments section](docs/screenshot-attachments.png)
 
 ### 📦 Reports & data
-- **Save Report** — persists to local storage with signatures + attachments + time tables + everything
+- **Save Report** — persists to the local SQLite database when run with `./serve.sh`, or to browser localStorage on static hosting/GitHub Pages
 - **Save to JSON** — download a portable backup with a descriptive filename (`<customer>_<date>_<id>.json`) — includes base64-encoded images
 - **Load from JSON** — round-trip restore of every field including attachments
 - **Clone** — copy a saved report into a fresh form (images carry over)
@@ -82,18 +82,35 @@ A modern, installable web app for **Atlas Copco service technicians** to generat
 
 ## 🚀 Quick start
 
-### Open it in your browser
-The app is a single `index.html` with no build step:
+### Local server with SQLite
+Run this from the project root:
 
 ```bash
-# Option 1 — open the file directly
-open index.html         # macOS
-xdg-open index.html     # Linux
-
-# Option 2 — serve it locally (recommended for PWA + service worker)
-python3 -m http.server 8765
-# then visit http://localhost:8765
+./serve.sh
 ```
+
+The launcher starts the local Python server, creates `./data/intervention_reports.sqlite3`, and opens `http://127.0.0.1:8000/` when possible. Use a custom port or suppress browser launch like this:
+
+```bash
+./serve.sh 8765
+./serve.sh --no-browser
+```
+
+For a fully portable/offline stick, keep the whole folder together and either:
+- use a machine that already has Python 3 + `sqlite3`, or
+- drop a portable interpreter under `runtime/python/bin/python3`, or
+- point `INTERVENTION_PYTHON` to a local interpreter path.
+
+The database lives in `./data/` so the app and data travel together.
+
+### Double-click launchers
+- **macOS:** `launch-macos.command`
+- **Windows:** `launch-windows.bat` (calls `launch-windows.ps1`)
+
+Both launchers start the same local server/database path and are meant for USB-stick use.
+
+### Static fallback
+The repo still works as a static app on GitHub Pages or from `index.html`. When `/api/health` is not available, the frontend falls back to the original browser `localStorage` behavior.
 
 ### Install as an app
 - **Android Chrome / Edge** → menu → *Install app*
@@ -152,12 +169,13 @@ Once installed it opens full-screen, runs offline, and behaves like a native app
 | **App** | Single-file `index.html` — vanilla HTML/CSS/JS, no build step |
 | **PWA** | `manifest.json` + `sw.js` (cache-first strategy) |
 | **Icons** | SVG sources in `icons/`, exported to PNG at 32/180/192/512 px |
-| **Storage** | Browser `localStorage` for reports; `FileReader` + `Blob` for JSON I/O |
+| **Storage** | SQLite via the local Python API when available; browser `localStorage` fallback; `FileReader` + `Blob` for JSON I/O |
 | **Dependencies** | None |
 
 ### Architecture notes
 
-- **Single source of truth** — every report lives in `localStorage` under the key `reports` as a JSON array. The form reads/writes this array directly.
+- **Storage source of truth** — when launched with `./serve.sh`, reports are stored as JSON records in `intervention_reports.sqlite3` through `/api/reports`. On static hosting, every report lives in `localStorage` under the key `reports` as before.
+- **API fallback** — the frontend probes `/api/health` on startup. If the API is absent or later fails, it keeps working with browser storage and visible warnings for write failures.
 - **Custom date & time inputs** — the native `<input type="date">` and `<input type="time">` were replaced because too many browsers ignore the `lang` attribute and fall back to the OS locale (MM/DD/YYYY or AM/PM). The custom inputs always show DD/MM/YYYY and HH:MM (24h), independent of platform.
 - **Signature persistence** — the canvas pixel data is captured with `toDataURL('image/png')` and stored as a base64 string on the report. Restoring is just `drawImage` back onto a fresh canvas.
 - **Service worker** — pre-caches the app shell on install, falls back to `index.html` for navigation when offline, and serves cached files before the network on every subsequent load.
@@ -169,6 +187,8 @@ Once installed it opens full-screen, runs offline, and behaves like a native app
 ```
 intervention-report/
 ├── index.html                ← the whole app (HTML + CSS + JS)
+├── server.py                 ← stdlib-only local static/API server
+├── serve.sh                  ← startup script for server + browser launch
 ├── manifest.json             ← PWA manifest
 ├── sw.js                     ← service worker (pre-caches the app shell)
 ├── icons/
