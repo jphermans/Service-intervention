@@ -2019,7 +2019,9 @@
         const reportList = document.getElementById('reportList');
         const reportIdEl = document.getElementById('reportId');
         const cloneSourceEl = document.getElementById('cloneSource');
+        const submitBtn = form.querySelector('button[type="submit"]');
         let lastSavedReport = null;
+        let activeEditReportId = '';
 
         function rawVal(v) { return v && String(v).trim() ? String(v) : '—'; }
         function val(v) { return escapeHtml(rawVal(v)); }
@@ -2055,6 +2057,47 @@
 
         function setReportId(id) {
             reportIdEl.value = id || newId();
+        }
+
+        function setSaveMode(mode, reportId) {
+            const editing = mode === 'edit' && reportId;
+            activeEditReportId = editing ? String(reportId) : '';
+            if (submitBtn) {
+                submitBtn.textContent = editing ? 'Update Report' : 'Save Report';
+                submitBtn.title = editing
+                    ? 'Update the loaded report without changing its Report ID.'
+                    : 'Save this report to the browser or local SQLite database.';
+            }
+            if (reportIdEl) {
+                reportIdEl.title = editing
+                    ? 'Loaded report ID — saving will update this exact record.'
+                    : 'Auto-generated unique identifier for this report. A new ID is created when you start a fresh record.';
+            }
+        }
+
+        async function openReportForEdit(id, { clone = false } = {}) {
+            const report = getReports().find(r => r && r.id === id);
+            if (!report) return false;
+            fillForm(report);
+            if (clone) {
+                setReportId();
+                setSaveMode('new');
+                if (typeof window.__clearAllSignatures === 'function') window.__clearAllSignatures();
+                restoreAttachments(report.attachments || { enabled: false, items: [] });
+                cloneSourceEl.value = '';
+                showToast('✓ Form filled from cloned report (new ID assigned)', 'success');
+            } else {
+                setReportId(report.id);
+                setSaveMode('edit', report.id);
+                await restoreSignatures(report.signatures || { enabled: false });
+                await restoreAttachments(report.attachments || { enabled: false, items: [] });
+                showToast('✓ Report loaded for editing / printing', 'success');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            form.classList.remove('flash');
+            void form.offsetWidth;
+            form.classList.add('flash');
+            return true;
         }
 
         // Safe localStorage wrapper: Safari private mode and quota errors throw.
@@ -2348,6 +2391,10 @@
             reportList.innerHTML = reports.map((r) => `
                 <div class="report-item">
                     <div class="report-actions">
+                        <button type="button" class="open-btn" data-id="${escapeHtml(r.id)}" title="Load this report back into the form so you can edit or print it. Saving will update the same Report ID.">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M21 14v7h-7"/><path d="M3 10V3h7"/><path d="M3 21l7-7"/></svg>
+                            Open
+                        </button>
                         <button type="button" class="clone-btn" data-id="${escapeHtml(r.id)}" title="Copy this report's data into a fresh form. The new entry gets its own ID; signatures and time tables are wiped so you can re-sign.">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                             Clone
@@ -2433,24 +2480,7 @@
 
         function cloneReportById(id) {
             if (!id) return;
-            const reports = getReports();
-            const report = reports.find(r => r.id === id);
-            if (!report) return;
-            fillForm(report);
-            // A clone is a new report — give it a fresh unique ID
-            setReportId();
-            // Signatures are session-only; cloning must not carry old ink from a previous form
-            if (typeof window.__clearAllSignatures === 'function') window.__clearAllSignatures();
-            // Restore the cloned report's attachments (if any) — these are persisted data,
-            // not session-only like signatures, so they DO carry over from the clone source.
-            restoreAttachments(report.attachments || { enabled: false, items: [] });
-            cloneSourceEl.value = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            // Visible feedback
-            showToast('✓ Form filled from cloned report (new ID assigned)', 'success');
-            form.classList.remove('flash');
-            void form.offsetWidth;
-            form.classList.add('flash');
+            void openReportForEdit(id, { clone: true });
         }
 
         form.addEventListener('submit', async (e) => {
@@ -2472,7 +2502,10 @@
             // print, and the saved card.
             newReport.attachments = collectAttachments();
             const reports = getReports();
-            reports.push(newReport);
+            const existingIndex = reports.findIndex(r => r && r.id === newReport.id);
+            const isUpdate = activeEditReportId && activeEditReportId === newReport.id;
+            if (existingIndex !== -1) reports[existingIndex] = newReport;
+            else reports.push(newReport);
             const saved = await saveReports(reports);
             if (!saved) {
                 // localStorage quota exceeded (too many attachments) or Safari private mode.
@@ -2486,13 +2519,18 @@
             }
             lastSavedReport = newReport;
             await loadReports();
-            // Assign a fresh ID for the next entry — but DO NOT clear signatures.
-            // They stay until the user explicitly clones or clears the form.
-            setReportId();
+            // Keep editing the same record when this was an update; otherwise start a fresh one.
+            if (isUpdate) {
+                setReportId(newReport.id);
+                setSaveMode('edit', newReport.id);
+            } else {
+                setReportId();
+                setSaveMode('new');
+            }
             // Make sure the Saved Reports section is open so the user sees the flash
             toggleReportsSection(false);
-            // Visible feedback: toast + scroll to the new card + flash highlight
-            showToast('✓ Report saved (signatures preserved)', 'success');
+            // Visible feedback: toast + scroll to the card + flash highlight
+            showToast(isUpdate ? '✓ Report updated' : '✓ Report saved (signatures preserved)', 'success');
             if (typeof markFormClean === 'function') markFormClean();
             const newCard = document.querySelector(`.report-item [data-id="${newReport.id}"]`)?.closest('.report-item');
             if (newCard) {
@@ -4003,6 +4041,8 @@ function openCalendar(anchorEl, currentIso, onSelect) {
                         throw new Error('Expected a single report object');
                     }
                     fillForm(data);
+                    setReportId(data.id);
+                    setSaveMode(data.id ? 'edit' : 'new', data.id);
                     // Restore signatures if the JSON has them; otherwise clear the pads
                     if (data.signatures) {
                         await restoreSignatures(data.signatures);
@@ -4056,7 +4096,15 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         });
 
         // Delete a single saved report / clone a report into the form
-        reportList.addEventListener('click', (e) => {
+        reportList.addEventListener('click', async (e) => {
+            const openBtn = e.target.closest('.open-btn');
+            if (openBtn) {
+                const ok = await openReportForEdit(openBtn.dataset.id, { clone: false });
+                if (ok) {
+                    toggleReportsSection(false);
+                }
+                return;
+            }
             const delBtn = e.target.closest('.delete-btn');
             if (delBtn) {
                 const id = delBtn.dataset.id;
@@ -4213,6 +4261,7 @@ function openCalendar(anchorEl, currentIso, onSelect) {
         // Pre-fill the report date with today if empty (user can still edit)
         if (reportDateEl && !reportDateEl.isoValue) reportDateEl.isoValue = todayIso();
         setReportId();
+        setSaveMode('new');
         updateOptimizationVisibility();
         // Seed each time table with one empty row so the UI is obvious
         fillTimeRows('workTimeRows', []);

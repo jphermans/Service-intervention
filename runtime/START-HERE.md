@@ -84,7 +84,18 @@ curl -s http://127.0.0.1:8000/api/reports | python3 -m json.tool
 curl -s http://127.0.0.1:8000/api/reports/ABC123 | python3 -m json.tool
 ```
 
-## 4) What to back up
+## 4) Open, edit, and print a saved report
+
+In the app, use the **Saved Reports** section:
+
+1. Click **Open** on a saved card.
+2. The form loads that exact report.
+3. The save button changes to **Update Report**.
+4. Print if needed, then save again to update the **same Report ID**.
+
+Use **Clone** only when you want a new report based on an old one.
+
+## 5) What to back up
 
 For a full portable backup, copy these folders/files together:
 
